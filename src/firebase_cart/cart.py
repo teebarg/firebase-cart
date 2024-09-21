@@ -59,8 +59,8 @@ class CartHandler:
 
         # Calculate tax and shipping
         tax_total = subtotal * self.TAX_RATE
-        shipping_total = self.SHIPPING_COST
-        total = subtotal + tax_total + shipping_total
+        delivery_fee = self.SHIPPING_COST
+        total = subtotal + tax_total + delivery_fee
 
         return Cart(
             cart_id=cart_id,
@@ -72,7 +72,7 @@ class CartHandler:
             billing_address=cart_details.get("billing_address", {}),
             subtotal=subtotal,
             tax_total=tax_total,
-            shipping_total=shipping_total,
+            delivery_fee=delivery_fee,
             total=total,
             payment_session=cart_details.get("payment_session", {})
         )

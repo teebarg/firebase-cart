@@ -11,6 +11,7 @@ class CartItem(BaseModel):
     quantity: int
     price: int
 
+
 class Cart(BaseModel):
     cart_id: str
     customer_id: str | None
@@ -21,10 +22,31 @@ class Cart(BaseModel):
     billing_address: dict
     subtotal: int
     tax_total: int
-    shipping_total: int
+    delivery_fee: int
     total: int
     payment_session: dict
+
 
 class FirebaseConfig(BaseModel):
     credentials: Dict[str, Any]
     database_url: Optional[str] = None
+
+
+class Order(BaseModel):
+    order_id: str
+    status: str
+    fulfillment_status: Optional[str] = None
+    cart_id: str
+    customer_id: Optional[str] = ""
+    email: Optional[str] = ""
+    line_items: List[CartItem]
+    shipping_method: dict
+    shipping_address: dict
+    billing_address: dict
+    subtotal: int
+    tax_total: int
+    delivery_fee: int
+    total: int
+    payment_session: dict
+    fulfillments: Optional[list[dict]] = []
+    payment_status: Optional[str] = ""
