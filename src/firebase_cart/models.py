@@ -16,12 +16,14 @@ class Cart(BaseModel):
     customer_id: str | None
     email: str | None
     items: List[CartItem]
+    shipping_method: dict
     shipping_address: dict
     billing_address: dict
     subtotal: int
     tax_total: int
     shipping_total: int
     total: int
+    payment_session: dict
 
 class FirebaseConfig(BaseModel):
     credentials: Dict[str, Any]

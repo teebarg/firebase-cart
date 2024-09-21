@@ -13,15 +13,15 @@ class CartHandler:
         return {
             "user_agent": 'CustomUserAgent/1.0'
         }
-    
+
     def create_cart(self, cart_id: str, customer_id: str = "", email: str = ""):
         cart_ref = self.db.get_cart_ref(cart_id)
 
         # Create context automatically
         context = self._create_context()
-        
+
         current_items = []
-        
+
         cart_ref.set({"items": current_items, "context": context, "customer_id": customer_id, "email": email})
         return {"message": "Cart created successfully", "cart_id": cart_id}
 
@@ -32,7 +32,7 @@ class CartHandler:
 
         # Create context automatically
         context = self._create_context()
-        
+
         if cart.exists:
             current_items = cart.to_dict().get("items", [])
             for i, existing_item in enumerate(current_items):
@@ -43,7 +43,7 @@ class CartHandler:
                 current_items.append(item.model_dump())
         else:
             current_items = [item.model_dump()]
-        
+
         cart_ref.set({"items": current_items, "context": context, "customer_id": customer_id, "email": email})
         return {"message": "Item added to cart"}
 
@@ -63,23 +63,25 @@ class CartHandler:
         total = subtotal + tax_total + shipping_total
 
         return Cart(
-            cart_id=cart_id, 
-            customer_id=cart_details.get("customer_id", ""), 
-            email=cart_details.get("email", ""), 
+            cart_id=cart_id,
+            customer_id=cart_details.get("customer_id", ""),
+            email=cart_details.get("email", ""),
             items=[CartItem(**item) for item in cart_details.get("items", [])],
+            shipping_method=cart_details.get("shipping_method", {}),
             shipping_address=cart_details.get("shipping_address", {}),
             billing_address=cart_details.get("billing_address", {}),
             subtotal=subtotal,
             tax_total=tax_total,
             shipping_total=shipping_total,
-            total=total
+            total=total,
+            payment_session=cart_details.get("payment_session", {})
         )
 
     def update_cart(self, cart: Cart):
         cart_ref = self.db.get_cart_ref(cart.cart_id)
         cart_ref.set(cart.model_dump())
         return {"message": "Cart updated successfully"}
-    
+
     def update_cart_quantity(self, cart_id: str, product_id: str, quantity: int):
         """
         Update the quantity of a specific item in the cart based on product_id.
@@ -109,7 +111,7 @@ class CartHandler:
         cart_ref.set(cart_data)
 
         return {"message": "Item quantity updated"}
-    
+
 
     def update_cart_details(self, cart_id: str, cart_data: dict):
         """
@@ -135,7 +137,7 @@ class CartHandler:
     def clear_cart(self, cart_id: str):
         self.db.get_cart_ref(cart_id).delete()
         return {"message": "Cart cleared successfully"}
-    
+
     def remove_from_cart(self, cart_id: str, item_id: str):
         """
         Remove a specific item from the cart based on item_id.
@@ -147,7 +149,7 @@ class CartHandler:
             return {"error": "Cart does not exist"}
 
         current_items = cart.to_dict().get("items", [])
-        
+
         # Filter out the item to be removed by item_id
         updated_items = [item for item in current_items if item.get("item_id") != item_id]
 
@@ -160,5 +162,4 @@ class CartHandler:
         cart_ref.set(cart_data)
 
         return {"message": "Item removed from cart"}
-    
-    
+
