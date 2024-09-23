@@ -30,6 +30,7 @@ class Cart(BaseModel):
 class FirebaseConfig(BaseModel):
     credentials: Dict[str, Any]
     database_url: Optional[str] = None
+    bucket: Optional[str] = None
 
 
 class Order(BaseModel):

@@ -14,7 +14,7 @@ class FirebaseDB:
         try:
             if not firebase_admin._apps:  # Check if the app is not already initialized
                 cred = credentials.Certificate(config.credentials)
-                firebase_admin.initialize_app(cred, {'databaseURL': config.database_url})
+                firebase_admin.initialize_app(cred, {'databaseURL': config.database_url, "storageBucket": config.bucket})
             self.db = firestore.client()
         except Exception as e:
             logger.error(f"storage init error, {e}")
