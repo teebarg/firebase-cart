@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
@@ -9,7 +10,7 @@ class CartItem(BaseModel):
     slug: str
     image: str | None
     quantity: int
-    price: int
+    price: Decimal
 
 
 class Cart(BaseModel):
@@ -20,10 +21,10 @@ class Cart(BaseModel):
     shipping_method: dict
     shipping_address: dict
     billing_address: dict
-    subtotal: int
-    tax_total: int
-    delivery_fee: int
-    total: int
+    subtotal: Decimal
+    tax_total: Decimal
+    delivery_fee: Decimal
+    total: Decimal
     payment_session: dict
 
 
@@ -44,10 +45,10 @@ class Order(BaseModel):
     shipping_method: dict
     shipping_address: dict
     billing_address: dict
-    subtotal: int
-    tax_total: int
-    delivery_fee: int
-    total: int
+    subtotal: Decimal
+    tax_total: Decimal
+    delivery_fee: Decimal
+    total: Decimal
     payment_session: dict
     fulfillments: Optional[list[dict]] = []
     payment_status: Optional[str] = ""
