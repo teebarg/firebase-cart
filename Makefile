@@ -15,6 +15,11 @@ TEST_DIR := tests
 # Default target
 .DEFAULT_GOAL := help
 
+# Distribute
+python -m build
+python -m twine upload dist/*
+
+
 .PHONY: help
 help:
 	@echo "Available commands:"
