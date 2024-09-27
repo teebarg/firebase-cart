@@ -15,9 +15,6 @@ TEST_DIR := tests
 # Default target
 .DEFAULT_GOAL := help
 
-# Distribute
-python -m build
-python -m twine upload dist/*
 
 
 .PHONY: help
@@ -56,6 +53,11 @@ clean:
 .PHONY: build
 build: clean
 	$(POETRY) build
+
+# Distribute
+distribute:
+	python -m build
+	python -m twine upload dist/*
 
 .PHONY: all
 all: lint format test build

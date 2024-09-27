@@ -1,13 +1,12 @@
 from .utils import generate_id
 from .models import Order, FirebaseConfig, CartItem
 from .database import FirebaseDB
-from decimal import Decimal
 import uuid
 from datetime import datetime
 
 class OrderHandler:
-    TAX_RATE = Decimal("0.10")  # 10% tax rate
-    SHIPPING_COST = Decimal("2500")  # Flat shipping cost
+    TAX_RATE = 0.05  # 10% tax rate
+    SHIPPING_COST = 2500  # Flat shipping cost
 
     def __init__(self, config: FirebaseConfig):
         self.db = FirebaseDB(config)
@@ -34,7 +33,7 @@ class OrderHandler:
         delivery_fee = self.SHIPPING_COST
         total = subtotal + tax_total + delivery_fee
 
-        # Convert Decimal values to float for Firestore
+        # Convert values to float for Firestore
         subtotal_float = float(subtotal)
         tax_total_float = float(tax_total)
         delivery_fee_float = float(delivery_fee)
@@ -42,7 +41,7 @@ class OrderHandler:
 
         # Create order details
         order_id = generate_id(prefix='order_')
-        
+
         order_data = {
             "order_id": order_id,
             "user_id": user_id,
@@ -77,7 +76,7 @@ class OrderHandler:
             "total": total,
             "order": order_data
         }
-    
+
     def get_orders(self, user_id: str, limit: int = 10):
         orders_ref = self.db.get_user_orders_ref(user_id)
 
@@ -87,11 +86,11 @@ class OrderHandler:
 
         orders = [order.to_dict() for order in orders_snapshot]
         return orders
-    
+
     def get_paginated_orders(self, page: int = 1, limit: int = 10):
         """
         Paginate the retrieval of orders with total count and pages.
-        
+
         Parameters:
         - user_id: The user making the request.
         - is_admin: If true, admin can retrieve all orders, otherwise only the user's orders.
@@ -132,7 +131,7 @@ class OrderHandler:
 
     def get_order(self, user_id: str, order_id: str, is_admin: bool):
         """
-        Get order details by order ID. 
+        Get order details by order ID.
         Non-admin users can only retrieve their own orders.
         """
         order_ref = self.db.get_order_ref(order_id)
@@ -152,7 +151,7 @@ class OrderHandler:
 
     def update_order(self, order_id: str, update_data: dict, is_admin: bool):
         """
-        Update order details dynamically. 
+        Update order details dynamically.
         Only admins can update orders.
         """
         if not is_admin:

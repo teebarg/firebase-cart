@@ -1,10 +1,9 @@
 from .models import CartItem, Cart, FirebaseConfig
 from .database import FirebaseDB
-from decimal import Decimal
 
 class CartHandler:
-    TAX_RATE = Decimal("0.05")  # 5% tax rate
-    SHIPPING_COST = Decimal("2500.00")  # Flat shipping cost
+    TAX_RATE = 0.05  # 5% tax rate
+    SHIPPING_COST = 2500  # Flat shipping cost
 
     def __init__(self, config: FirebaseConfig):
         self.db = FirebaseDB(config)
