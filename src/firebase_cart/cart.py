@@ -1,9 +1,10 @@
 from .models import CartItem, Cart, FirebaseConfig
 from .database import FirebaseDB
+from google.cloud.firestore_v1 import SERVER_TIMESTAMP
+
 
 class CartHandler:
     TAX_RATE = 0.05  # 5% tax rate
-    SHIPPING_COST = 2500  # Flat shipping cost
 
     def __init__(self, config: FirebaseConfig):
         self.db = FirebaseDB(config)
@@ -40,10 +41,22 @@ class CartHandler:
                     break
             else:
                 current_items.append(item.model_dump())
+            cart_ref.update({
+                "items": current_items,
+                "updated_at": SERVER_TIMESTAMP
+            })
         else:
             current_items = [item.model_dump()]
+            cart_ref.set({
+                "items": current_items,
+                "context": context,
+                "customer_id": customer_id,
+                "email": email,
+                "created_at": SERVER_TIMESTAMP,
+                "updated_at": SERVER_TIMESTAMP
+            })
 
-        cart_ref.set({"items": current_items, "context": context, "customer_id": customer_id, "email": email})
+        # cart_ref.set({"items": current_items, "context": context, "customer_id": customer_id, "email": email})
         return {"message": "Item added to cart"}
 
     def get_cart(self, cart_id: str):
@@ -58,7 +71,7 @@ class CartHandler:
 
         # Calculate tax and shipping
         tax_total = subtotal * self.TAX_RATE
-        delivery_fee = self.SHIPPING_COST
+        delivery_fee = cart_details.get("shipping_method", {}).get("amount", 0)
         total = subtotal + tax_total + delivery_fee
 
         return Cart(
@@ -73,12 +86,18 @@ class CartHandler:
             tax_total=tax_total,
             delivery_fee=delivery_fee,
             total=total,
-            payment_session=cart_details.get("payment_session", {})
+            payment_session=cart_details.get("payment_session", {}),
+            created_at=cart_details.get("created_at", None),
+            updated_at=cart_details.get("updated_at", None)
         )
 
     def update_cart(self, cart: Cart):
         cart_ref = self.db.get_cart_ref(cart.cart_id)
-        cart_ref.set(cart.model_dump())
+        # cart_ref.set(cart.model_dump())
+        cart_ref.update({
+            "items": cart.items,
+            "updated_at": SERVER_TIMESTAMP  # Update the updated_at timestamp
+        })
         return {"message": "Cart updated successfully"}
 
     def update_cart_quantity(self, cart_id: str, product_id: str, quantity: int):

@@ -1,12 +1,11 @@
 from .utils import generate_id
 from .models import Order, FirebaseConfig, CartItem
 from .database import FirebaseDB
-import uuid
-from datetime import datetime
+from google.cloud.firestore_v1 import SERVER_TIMESTAMP
+from firebase_admin import firestore
 
 class OrderHandler:
     TAX_RATE = 0.05  # 10% tax rate
-    SHIPPING_COST = 2500  # Flat shipping cost
 
     def __init__(self, config: FirebaseConfig):
         self.db = FirebaseDB(config)
@@ -30,14 +29,8 @@ class OrderHandler:
 
         # Calculate tax and shipping
         tax_total = subtotal * self.TAX_RATE
-        delivery_fee = self.SHIPPING_COST
+        delivery_fee = cart_data.get("shipping_method", {}).get("amount", 0)
         total = subtotal + tax_total + delivery_fee
-
-        # Convert values to float for Firestore
-        subtotal_float = float(subtotal)
-        tax_total_float = float(tax_total)
-        delivery_fee_float = float(delivery_fee)
-        total_float = float(total)
 
         # Create order details
         order_id = generate_id(prefix='order_')
@@ -48,24 +41,28 @@ class OrderHandler:
             "cart_id": cart_id,
             "fulfillment_status": "not_fulfilled",
             "line_items": [item.model_dump() for item in items],
-            "subtotal": subtotal_float,
-            "tax_total": tax_total_float,
-            "delivery_fee": delivery_fee_float,
-            "total": total_float,
+            "subtotal": float(subtotal),
+            "tax_total": float(tax_total),
+            "delivery_fee": float(delivery_fee),
+            "total": float(total),
             "status": "pending",  # Default order status
             "payment_status": "awaiting",
-            "created_at": datetime.utcnow().isoformat(),
             "shipping_method":cart_data.get("shipping_method", {}),
             "shipping_address": cart_data.get("shipping_address"),
             "billing_address": cart_data.get("billing_address"),
             "email": cart_data.get("email"),
             "payment_session":cart_data.get("payment_session", {}),
-            "fulfillments": []
+            "fulfillments": [],
+            "created_at": SERVER_TIMESTAMP,
+            "updated_at": SERVER_TIMESTAMP,
         }
 
         # Save order to Firebase
         order_ref = self.db.get_order_ref(order_id)
         order_ref.set(order_data)
+
+        # Fetch the saved order to get the resolved timestamps
+        saved_order = order_ref.get().to_dict()
 
         # Optionally clear the cart after order creation
         # self.db.get_cart_ref(cart_id).delete()
@@ -74,14 +71,14 @@ class OrderHandler:
             "message": "Order created successfully",
             "order_id": order_id,
             "total": total,
-            "order": order_data
+            "order": saved_order
         }
 
-    def get_orders(self, user_id: str, limit: int = 10):
+    def get_orders(self, user_id: str, limit: int = 20):
         orders_ref = self.db.get_user_orders_ref(user_id)
 
         # Fetch orders with pagination
-        query = orders_ref.order_by("created_at").limit(limit)
+        query = orders_ref.order_by("created_at", direction=firestore.Query.DESCENDING).limit(limit)
         orders_snapshot = query.get()
 
         orders = [order.to_dict() for order in orders_snapshot]
@@ -162,6 +159,8 @@ class OrderHandler:
 
         if not order.exists:
             return {"error": "Order does not exist"}
+
+        update_data.update({"updated_at": SERVER_TIMESTAMP})
 
         order_data = order.to_dict()
         order_data.update(update_data)

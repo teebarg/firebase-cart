@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 class CartItem(BaseModel):
     item_id: str
@@ -25,6 +26,8 @@ class Cart(BaseModel):
     delivery_fee: float
     total: float
     payment_session: dict
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 
 class FirebaseConfig(BaseModel):
@@ -51,3 +54,5 @@ class Order(BaseModel):
     payment_session: dict
     fulfillments: Optional[list[dict]] = []
     payment_status: Optional[str] = ""
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
